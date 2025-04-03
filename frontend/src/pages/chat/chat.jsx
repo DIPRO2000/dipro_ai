@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Send, Menu } from "lucide-react";
 import DOMPurify from "dompurify";
 
@@ -7,6 +8,8 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState([]); // Stores chat sessions
   const [selectedChat, setSelectedChat] = useState(null);
+  const navigate=useNavigate();
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
   const firstName = localStorage.getItem("firstName");
 
   // ✅ Messages will now properly belong to their session
@@ -20,7 +23,7 @@ export default function ChatPage() {
       const token = localStorage.getItem("Token");
 
       try {
-        const response = await fetch("http://localhost:3000/api/chats/history", {
+        const response = await fetch(`${API_BASE_URL}/api/chats/history`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -55,7 +58,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/chats/send", {
+      const response = await fetch(`${API_BASE_URL}/api/chats/send`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,6 +126,15 @@ export default function ChatPage() {
     setSelectedChat(null);
   };
 
+  const [isLoggedIn, setIsLoggedIn] = useState(!!(localStorage.getItem("Token") && localStorage.getItem("firstName")));
+  const logoutRedirect = () => {
+    localStorage.removeItem("Token");
+    localStorage.removeItem("firstName");
+    alert("Successfully Logout");
+    navigate("/");
+    setIsLoggedIn(false);
+  };
+
   return (
     <div className="flex h-screen">
       {/* Chat History Sidebar */}
@@ -153,28 +165,30 @@ export default function ChatPage() {
           <button className="md:hidden p-2 bg-gray-800 rounded">
             <Menu className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-lg font-semibold">Chat</h1>
+          <h1 className="text-lg font-semibold flex-1 text-center">Chat</h1>
+          <button onClick={logoutRedirect} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md">Logout</button>
         </div>
+
 
         {/* Chat Messages */}
         <div className="flex-1 p-4 overflow-y-auto">
           {messages?.map((msg, index) => (
             <div
-              key={index}
-              className={`mb-2 p-3 max-w-xs rounded-lg text-sm leading-relaxed ${
-                msg.sender === "user"
-                  ? "bg-blue-500 text-white self-end ml-auto"
-                  : "bg-gray-300 text-black  max-w-7xl"
-              }`}
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(
-                  msg.text
-                    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-                    .replace(/(?<!\*)\*(\S.*?)\*(?!\*)/g, "<i>$1</i>")
-                    .replace(/\n\* (.*?)/g, "<ul><li>$1</li></ul>")
-                ),
-              }}
-            />
+            key={index}
+            className={`mb-2 p-3 rounded-lg text-sm leading-relaxed ${
+              msg.sender === "user"
+                ? "bg-blue-500 text-white self-end ml-auto max-w-xs" // User messages stay in max-width
+                : "bg-gray-300 text-black w-full self-start" // Bot messages take full width
+            }`}
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(
+                msg.text
+                  .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+                  .replace(/(?<!\*)\*(\S.*?)\*(?!\*)/g, "<i>$1</i>")
+                  .replace(/\n\* (.*?)/g, "<ul><li>$1</li></ul>")
+              ),
+            }}
+          />
           ))}
           {loading && <div className="p-2 text-gray-500">Typing...</div>}
         </div>
@@ -184,7 +198,7 @@ export default function ChatPage() {
           <input
             type="text"
             placeholder="Type a message..."
-            className="flex-1 p-2 border rounded-lg"
+            className="flex-1 p-2 border rounded-lg text-black"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && sendMessage()}

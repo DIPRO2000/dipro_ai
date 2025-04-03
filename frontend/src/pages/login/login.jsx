@@ -38,6 +38,7 @@ export default function LoginPage() {
         // Save token and User Name in local storage (optional)
         localStorage.setItem("Token", data.token);
         localStorage.setItem("firstName",data.user.firstName)
+        
 
         // Redirect to homepage or dashboard after successful login
         navigate("/"); // Replace with your desired route

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import "./landing.css";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -12,17 +12,29 @@ const Landing = () => {
     AOS.init();
   }, []);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(!!(localStorage.getItem("Token") && localStorage.getItem("firstName")));
+  const logoutRedirect = () => {
+    localStorage.removeItem("Token");
+    localStorage.removeItem("firstName");
+    alert("Successfully Logout");
+    navigate("/");
+    setIsLoggedIn(false);
+  };
+  
+
   const loginChecker=()=>{
 
     const token=localStorage.getItem("Token");
-    if(!token)
+    const user=localStorage.getItem("firstName");
+    if(token && user)
     {
-        alert("Please Log In");
-        navigate("/login");
+      navigate("/chat");
+      
     }
     else
     {
-        navigate("/chat");
+      alert("Please Log In");
+      navigate("/login");
     }
   }
 
@@ -49,10 +61,38 @@ const Landing = () => {
             <a data-aos="fade-down" data-aos-duration="2500">Resources</a>
             <a data-aos="fade-down" data-aos-duration="3000">Docs</a>
           </nav>
-          <div className="btn-group ">
-            <button data-aos="fade-down" data-aos-duration="1500" className="btn-signing" onClick={signupRedirect}>Sign Up</button>
-            <button data-aos="fade-down" data-aos-duration="1500" className="btn-signing" onClick={loginRedirect}>Log In</button>
-          </div>
+          <div className="btn-group">
+                {isLoggedIn ? (
+                  <button 
+                    data-aos="fade-down" 
+                    data-aos-duration="1500" 
+                    className="btn-logout" 
+                    onClick={logoutRedirect}
+                  >
+                    Log Out
+                  </button>
+                ) : (
+                  <>
+                    <button 
+                      data-aos="fade-down" 
+                      data-aos-duration="1500" 
+                      className="btn-signing" 
+                      onClick={signupRedirect}
+                    >
+                      Sign Up
+                    </button>
+                    <button 
+                      data-aos="fade-down" 
+                      data-aos-duration="1500" 
+                      className="btn-signing" 
+                      onClick={loginRedirect}
+                    >
+                      Log In
+                    </button>
+                  </>
+                )}
+            </div>
+
           
         </header>
 
